@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>视频分享裂变示例</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f4f4;
+      margin: 0;
+      padding: 20px;
+      text-align: center;
+    }
+    h1 {
+      color: #333;
+    }
+    video {
+      width: 100%;
+      max-width: 640px;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+    #overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.9);
+      color: #fff;
+      z-index: 999;
+      padding: 40px 20px;
+      box-sizing: border-box;
+      text-align: center;
+    }
+    #overlay h2 {
+      font-size: 24px;
+      margin-bottom: 16px;
+    }
+    #continue-btn {
+      padding: 12px 24px;
+      background-color: #00c300;
+      color: white;
+      font-size: 18px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>精彩视频</h1>
+
+  <video id="myVideo" controls>
+    <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4">
+    您的浏览器不支持 HTML5 视频。
+  </video>
+
+  <div id="overlay">
+    <h2>要观看完整视频</h2>
+    <p>请将本页面分享到微信群</p>
+    <p>然后点击下方按钮继续观看</p>
+    <button id="continue-btn">我已分享</button>
+  </div>
+
+  <script>
+    const video = document.getElementById("myVideo");
+    const overlay = document.getElementById("overlay");
+    const continueBtn = document.getElementById("continue-btn");
+    const freeTime = 20; // 可免费观看秒数
+
+    let locked = false;
+
+    video.addEventListener("timeupdate", () => {
+      if (!locked && video.currentTime >= freeTime) {
+        locked = true;
+        video.pause();
+        overlay.style.display = "block";
+      }
+    });
+
+    continueBtn.addEventListener("click", () => {
+      overlay.style.display = "none";
+      video.play();
+    });
+  </script>
+</body>
+</html>
