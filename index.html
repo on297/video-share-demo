@@ -3,90 +3,132 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>视频分享裂变示例</title>
+  <title>🔥 限时视频 · 微信专享</title>
   <style>
     body {
-      font-family: Arial, sans-serif;
-      background: #f4f4f4;
       margin: 0;
-      padding: 20px;
+      background-color: #000;
+      color: #fff;
+      font-family: 'Arial', sans-serif;
       text-align: center;
+      padding: 20px;
     }
     h1 {
-      color: #333;
+      margin-top: 20px;
+      font-size: 24px;
     }
     video {
       width: 100%;
-      max-width: 640px;
+      max-width: 720px;
       border-radius: 12px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      margin-top: 20px;
     }
     #overlay {
       display: none;
       position: fixed;
+      z-index: 9999;
       top: 0;
       left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(0, 0, 0, 0.9);
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.95);
       color: #fff;
-      z-index: 999;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
       padding: 40px 20px;
-      box-sizing: border-box;
-      text-align: center;
     }
     #overlay h2 {
-      font-size: 24px;
-      margin-bottom: 16px;
+      font-size: 20px;
+      margin-bottom: 20px;
     }
     #continue-btn {
       padding: 12px 24px;
       background-color: #00c300;
-      color: white;
-      font-size: 18px;
       border: none;
       border-radius: 8px;
+      color: white;
+      font-size: 16px;
       cursor: pointer;
-      margin-top: 20px;
+    }
+    #weixin-tip {
+      display: none;
+      background: #111;
+      padding: 20px;
+      border-radius: 10px;
+      margin-top: 40px;
     }
   </style>
 </head>
 <body>
 
-  <h1>精彩视频</h1>
+  <h1>🎥 微信专属 · 精彩片段</h1>
 
   <video id="myVideo" controls>
-    <source src="https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4" type="video/mp4">
-    您的浏览器不支持 HTML5 视频。
+    <source src="https://vdlt.bdstatic.com/vod-gechgi84v43uhfhp/mda-km20mv29kbevugcm.mp4?_wv=3&alert%28%29id=1631728807000" type="video/mp4">
+    当前浏览器不支持播放此视频。
   </video>
 
   <div id="overlay">
-    <h2>要观看完整视频</h2>
-    <p>请将本页面分享到微信群</p>
-    <p>然后点击下方按钮继续观看</p>
+    <h2>🎯 请将本页面分享到微信群以解锁完整视频</h2>
     <button id="continue-btn">我已分享</button>
+  </div>
+
+  <div id="weixin-tip">
+    本页面仅支持在 <strong>微信</strong> 中打开，请使用微信扫码访问。
   </div>
 
   <script>
     const video = document.getElementById("myVideo");
     const overlay = document.getElementById("overlay");
     const continueBtn = document.getElementById("continue-btn");
-    const freeTime = 5; // 播放 5 秒后触发
+    const weixinTip = document.getElementById("weixin-tip");
 
+    // 👀 微信环境检测
+    function isWeixinBrowser() {
+      const ua = navigator.userAgent.toLowerCase();
+      return ua.includes('micromessenger');
+    }
+
+    if (!isWeixinBrowser()) {
+      video.style.display = 'none';
+      weixinTip.style.display = 'block';
+    }
+
+    // ⏱ 限观看时间（单位秒）
+    const limitTime = 10;
     let locked = false;
 
+    // 禁止快进
+    let lastTime = 0;
     video.addEventListener("timeupdate", () => {
-      if (!locked && video.currentTime >= freeTime) {
+      if (!locked && video.currentTime >= limitTime) {
         locked = true;
         video.pause();
-        overlay.style.display = "block";
+        overlay.style.display = "flex";
+      }
+      // 快进检测
+      if (video.currentTime - lastTime > 1.5) {
+        video.currentTime = lastTime;
+      }
+      lastTime = video.currentTime;
+    });
+
+    // 防止手动拖动进度条
+    video.addEventListener('seeking', () => {
+      if (video.currentTime > lastTime + 1) {
+        video.currentTime = lastTime;
       }
     });
 
+    // 解锁按钮
     continueBtn.addEventListener("click", () => {
       overlay.style.display = "none";
       video.play();
     });
   </script>
+
 </body>
 </html>
+
