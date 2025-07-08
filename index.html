@@ -65,7 +65,7 @@
 
   <div class="video-list" id="videoList">
     <button class="video-button" data-url="https://vdlt.bdstatic.com/vod-gechgi84v43uhfhp/mda-km20mv29kbevugcm.mp4?_wv=3&alert%28%29id=1631728807000">视频 1</button>
-    <button class="video-button" data-url="https://mooctest.oss-cn-shanghai.aliyuncs.com/Learn/test.m3u8">视频 2</button>
+    <button class="video-button" data-url="https://rumov1.xiaojimov.xyz/mov/UP2/fq2/250708/fqzy57636/fc3wppkm7y.m3u8">视频 2</button>
     <button class="video-button" data-url="https://v2025.fhbbff.com/20250405/KYouDp7r/index.m3u8">视频 3</button>
   </div>
 
@@ -92,37 +92,46 @@
     }
 
     function loadVideo(url) {
+      // 清理旧视频状态
       if (hls) {
         hls.destroy();
         hls = null;
       }
 
       setActiveButton(url);
-      const isM3U8 = url.endsWith(".m3u8") || url.includes(".m3u8");
+      const isM3U8 = url.includes(".m3u8");
+      const resumeTime = loadProgress(url);
+
+      video.pause();
+      video.removeAttribute('src');
+      video.load();
+      video.currentTime = 0;
 
       if (isM3U8 && Hls.isSupported()) {
         hls = new Hls();
         hls.loadSource(url);
         hls.attachMedia(video);
         hls.on(Hls.Events.MANIFEST_PARSED, function () {
-          video.currentTime = loadProgress(url);
+          video.currentTime = resumeTime;
           video.play();
         });
       } else if (video.canPlayType('application/vnd.apple.mpegurl') && isM3U8) {
         video.src = url;
-        video.addEventListener('loadedmetadata', () => {
-          video.currentTime = loadProgress(url);
+        video.addEventListener('loadedmetadata', function onLoaded() {
+          video.removeEventListener('loadedmetadata', onLoaded);
+          video.currentTime = resumeTime;
           video.play();
         });
       } else {
-        // fallback for .mp4 or other formats
         video.src = url;
-        video.addEventListener('loadedmetadata', () => {
-          video.currentTime = loadProgress(url);
+        video.addEventListener('loadedmetadata', function onLoaded() {
+          video.removeEventListener('loadedmetadata', onLoaded);
+          video.currentTime = resumeTime;
           video.play();
         });
       }
 
+      // 定期保存播放进度
       clearInterval(saveInterval);
       saveInterval = setInterval(() => {
         if (!video.paused && !video.ended) {
@@ -131,13 +140,12 @@
       }, 3000);
     }
 
-    // 默认加载第一个视频
+    // 默认播放第一个视频
     const firstUrl = buttons[0].dataset.url;
     loadVideo(firstUrl);
 
     buttons.forEach(btn => {
       btn.addEventListener('click', () => {
-        video.pause();
         loadVideo(btn.dataset.url);
       });
     });
