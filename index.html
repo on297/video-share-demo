@@ -77,4 +77,71 @@
     let saveInterval = null;
 
     function saveProgress(url, time) {
-      localStorage.setItem("progress_" + url, time.toFix_
+      localStorage.setItem("progress_" + url, time.toFixed(1));
+    }
+
+    function loadProgress(url) {
+      const t = parseFloat(localStorage.getItem("progress_" + url));
+      return isNaN(t) ? 0 : t;
+    }
+
+    function setActiveButton(url) {
+      buttons.forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.url === url);
+      });
+    }
+
+    function loadVideo(url) {
+      if (hls) {
+        hls.destroy();
+        hls = null;
+      }
+
+      setActiveButton(url);
+      const isM3U8 = url.endsWith(".m3u8") || url.includes(".m3u8");
+
+      if (isM3U8 && Hls.isSupported()) {
+        hls = new Hls();
+        hls.loadSource(url);
+        hls.attachMedia(video);
+        hls.on(Hls.Events.MANIFEST_PARSED, function () {
+          video.currentTime = loadProgress(url);
+          video.play();
+        });
+      } else if (video.canPlayType('application/vnd.apple.mpegurl') && isM3U8) {
+        video.src = url;
+        video.addEventListener('loadedmetadata', () => {
+          video.currentTime = loadProgress(url);
+          video.play();
+        });
+      } else {
+        // fallback for .mp4 or other formats
+        video.src = url;
+        video.addEventListener('loadedmetadata', () => {
+          video.currentTime = loadProgress(url);
+          video.play();
+        });
+      }
+
+      clearInterval(saveInterval);
+      saveInterval = setInterval(() => {
+        if (!video.paused && !video.ended) {
+          saveProgress(url, video.currentTime);
+        }
+      }, 3000);
+    }
+
+    // 默认加载第一个视频
+    const firstUrl = buttons[0].dataset.url;
+    loadVideo(firstUrl);
+
+    buttons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        video.pause();
+        loadVideo(btn.dataset.url);
+      });
+    });
+  </script>
+
+</body>
+</html>
