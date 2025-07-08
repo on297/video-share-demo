@@ -1,134 +1,111 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
+  <title>🎬 视频播放页</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>🔥 限时视频 · 微信专享</title>
   <style>
     body {
       margin: 0;
-      background-color: #000;
+      background: #000;
       color: #fff;
-      font-family: 'Arial', sans-serif;
+      font-family: Arial, sans-serif;
       text-align: center;
       padding: 20px;
     }
     h1 {
-      margin-top: 20px;
       font-size: 24px;
+      margin-bottom: 20px;
     }
     video {
       width: 100%;
       max-width: 720px;
       border-radius: 12px;
+      background: #000;
+    }
+    select {
       margin-top: 20px;
-    }
-    #overlay {
-      display: none;
-      position: fixed;
-      z-index: 9999;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      background: rgba(0, 0, 0, 0.95);
-      color: #fff;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      padding: 40px 20px;
-    }
-    #overlay h2 {
-      font-size: 20px;
-      margin-bottom: 20px;
-    }
-    #continue-btn {
-      padding: 12px 24px;
-      background-color: #00c300;
-      border: none;
-      border-radius: 8px;
-      color: white;
+      padding: 10px;
       font-size: 16px;
-      cursor: pointer;
-    }
-    #weixin-tip {
-      display: none;
-      background: #111;
-      padding: 20px;
-      border-radius: 10px;
-      margin-top: 40px;
+      border-radius: 6px;
+      border: none;
     }
   </style>
 </head>
 <body>
 
-  <h1>🎥 微信专属 · 精彩片段</h1>
+  <h1>🎬 视频播放页（自动记忆进度）</h1>
 
-  <video id="myVideo" controls>
-    <source src="https://vdlt.bdstatic.com/vod-gechgi84v43uhfhp/mda-km20mv29kbevugcm.mp4?_wv=3&alert%28%29id=1631728807000" type="video/mp4">
-    当前浏览器不支持播放此视频。
-  </video>
+  <video id="video" controls playsinline webkit-playsinline></video>
 
-  <div id="overlay">
-    <h2>🎯 请将本页面分享到微信群以解锁完整视频</h2>
-    <button id="continue-btn">我已分享</button>
+  <div>
+    <select id="videoSelector">
+      <option value="https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8">测试视频 1</option>
+      <option value="https://mooctest.oss-cn-shanghai.aliyuncs.com/Learn/test.m3u8">测试视频 2</option>
+      <option value="https://bitdash-a.akamaihd.net/content/sintel/hls/playlist.m3u8">测试视频 3</option>
+    </select>
   </div>
 
-  <div id="weixin-tip">
-    本页面仅支持在 <strong>微信</strong> 中打开，请使用微信扫码访问。
-  </div>
-
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
   <script>
-    const video = document.getElementById("myVideo");
-    const overlay = document.getElementById("overlay");
-    const continueBtn = document.getElementById("continue-btn");
-    const weixinTip = document.getElementById("weixin-tip");
+    const video = document.getElementById('video');
+    const selector = document.getElementById('videoSelector');
+    let hls;
+    let saveInterval = null;
 
-    // 👀 微信环境检测
-    function isWeixinBrowser() {
-      const ua = navigator.userAgent.toLowerCase();
-      return ua.includes('micromessenger');
+    // 保存进度（以视频 URL 为键）
+    function saveProgress(url, time) {
+      localStorage.setItem("progress_" + url, time.toFixed(1));
     }
 
-    if (!isWeixinBrowser()) {
-      video.style.display = 'none';
-      weixinTip.style.display = 'block';
+    // 读取进度
+    function loadProgress(url) {
+      const t = parseFloat(localStorage.getItem("progress_" + url));
+      return isNaN(t) ? 0 : t;
     }
 
-    // ⏱ 限观看时间（单位秒）
-    const limitTime = 10;
-    let locked = false;
-
-    // 禁止快进
-    let lastTime = 0;
-    video.addEventListener("timeupdate", () => {
-      if (!locked && video.currentTime >= limitTime) {
-        locked = true;
-        video.pause();
-        overlay.style.display = "flex";
+    function loadVideo(url) {
+      if (hls) {
+        hls.destroy();
+        hls = null;
       }
-      // 快进检测
-      if (video.currentTime - lastTime > 1.5) {
-        video.currentTime = lastTime;
-      }
-      lastTime = video.currentTime;
-    });
 
-    // 防止手动拖动进度条
-    video.addEventListener('seeking', () => {
-      if (video.currentTime > lastTime + 1) {
-        video.currentTime = lastTime;
+      if (Hls.isSupported()) {
+        hls = new Hls();
+        hls.loadSource(url);
+        hls.attachMedia(video);
+        hls.on(Hls.Events.MANIFEST_PARSED, function () {
+          // 恢复播放进度
+          const savedTime = loadProgress(url);
+          video.currentTime = savedTime;
+          video.play();
+        });
+      } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+        video.src = url;
+        video.addEventListener('loadedmetadata', () => {
+          video.currentTime = loadProgress(url);
+          video.play();
+        });
       }
-    });
 
-    // 解锁按钮
-    continueBtn.addEventListener("click", () => {
-      overlay.style.display = "none";
-      video.play();
+      // 定时保存播放进度
+      clearInterval(saveInterval);
+      saveInterval = setInterval(() => {
+        if (!video.paused && !video.ended) {
+          saveProgress(url, video.currentTime);
+        }
+      }, 3000); // 每 3 秒记录一次
+    }
+
+    // 初始化播放第一个视频
+    const initialUrl = selector.value;
+    loadVideo(initialUrl);
+
+    selector.addEventListener('change', () => {
+      video.pause();
+      loadVideo(selector.value);
     });
   </script>
 
 </body>
 </html>
-
