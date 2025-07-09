@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
-  <title>视频播放页</title>
+  <title></title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     * {
@@ -21,10 +21,9 @@
       padding: 20px;
     }
     h1 {
-      font-size: 16px;
-      opacity: 0.7;
-      text-align: center;
+      font-size: 24px;
       margin-bottom: 20px;
+      text-align: center;
     }
     video {
       width: 100%;
@@ -60,22 +59,20 @@
 </head>
 <body>
 
-  <h1>🎬 请勿相信视频中的广告</h1>
+  <h1>🎬请勿相信视频中的广告</h1>
 
   <video id="video" controls playsinline webkit-playsinline></video>
 
   <div class="video-list" id="videoList">
-    <button class="video-button" data-url="https://v2025.fhbbff.com/20250629/hA7itnUd/index.m3u8">成宮はるあ绝顶高潮精华特辑</button>
+    <button class="video-button" data-url="https://v2025.fhbbff.com/20250629/hA7itnUd/index.m3u8 ">成宮はるあ绝顶高潮精华特辑</button>
     <button class="video-button" data-url="https://v2024.fhbbff.com/20241119/goljzkiM/index.m3u8">两个辣妹海莉桑德斯和莉莉贝拉</button>
-    <button class="video-button" data-url="https://v2025.fhbbff.com/20250418/zOPoJy9O/index.m3u8">新人永野一夏初体验激震！</button>
-    <button class="video-button" data-url="https://v2025.fhbbff.com/20250627/4gQwTkJm/index.m3u8">絶え間な激情的な接吻と挿入</button>
-    <button class="video-button" data-url="https://v2025.fhbbff.com/20250616/NhxrHMf0/index.m3u8">绝密珍藏！藤田留美极品嫩穴大放送</button>
+    <button class="video-button" data-url="https://v2025.fhbbff.com/20250418/zOPoJy9O/index.m3u8 ">新人永野一夏初体验激震！</button>
+    <button class="video-button" data-url="https://v2025.fhbbff.com/20250627/4gQwTkJm/index.m3u8 ">絶え間な激情的な接吻と挿入</button>
+    <button class="video-button" data-url="https://v2025.fhbbff.com/20250616/NhxrHMf0/index.m3u8">绝密珍藏！藤田留美极品嫩穴大放送 </button>
     <button class="video-button" data-url="https://v2025.fhbbff.com/20250708/YHpwroXH/index.m3u8">前列腺开发高潮体验，彻底变成女人！</button>
   </div>
 
-  <!-- 使用国内可用 CDN 加载 HLS.js -->
-  <script src="https://unpkg.zhimg.com/hls.js@latest"></script>
-
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
   <script>
     const video = document.getElementById('video');
     const buttons = document.querySelectorAll('.video-button');
@@ -98,6 +95,7 @@
     }
 
     function loadVideo(url) {
+      // 清理旧视频状态
       if (hls) {
         hls.destroy();
         hls = null;
@@ -120,7 +118,7 @@
           video.currentTime = resumeTime;
           video.play();
         });
-      } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+      } else if (video.canPlayType('application/vnd.apple.mpegurl') && isM3U8) {
         video.src = url;
         video.addEventListener('loadedmetadata', function onLoaded() {
           video.removeEventListener('loadedmetadata', onLoaded);
@@ -128,9 +126,15 @@
           video.play();
         });
       } else {
-        alert("该浏览器不支持播放该视频");
+        video.src = url;
+        video.addEventListener('loadedmetadata', function onLoaded() {
+          video.removeEventListener('loadedmetadata', onLoaded);
+          video.currentTime = resumeTime;
+          video.play();
+        });
       }
 
+      // 定期保存播放进度
       clearInterval(saveInterval);
       saveInterval = setInterval(() => {
         if (!video.paused && !video.ended) {
