@@ -73,7 +73,9 @@
     <button class="video-button" data-url="https://v2025.fhbbff.com/20250708/YHpwroXH/index.m3u8">前列腺开发高潮体验，彻底变成女人！</button>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+  <!-- 使用国内可用 CDN 加载 HLS.js -->
+  <script src="https://unpkg.zhimg.com/hls.js@latest"></script>
+
   <script>
     const video = document.getElementById('video');
     const buttons = document.querySelectorAll('.video-button');
@@ -91,13 +93,11 @@
 
     function setActiveButton(url) {
       buttons.forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.url.trim() === url);
+        btn.classList.toggle('active', btn.dataset.url === url);
       });
     }
 
-    function loadVideo(rawUrl) {
-      const url = rawUrl.trim(); // 自动修正空格问题
-
+    function loadVideo(url) {
       if (hls) {
         hls.destroy();
         hls = null;
@@ -120,7 +120,7 @@
           video.currentTime = resumeTime;
           video.play();
         });
-      } else if (video.canPlayType('application/vnd.apple.mpegurl') && isM3U8) {
+      } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
         video.src = url;
         video.addEventListener('loadedmetadata', function onLoaded() {
           video.removeEventListener('loadedmetadata', onLoaded);
@@ -128,12 +128,7 @@
           video.play();
         });
       } else {
-        video.src = url;
-        video.addEventListener('loadedmetadata', function onLoaded() {
-          video.removeEventListener('loadedmetadata', onLoaded);
-          video.currentTime = resumeTime;
-          video.play();
-        });
+        alert("该浏览器不支持播放该视频");
       }
 
       clearInterval(saveInterval);
@@ -145,7 +140,7 @@
     }
 
     // 默认播放第一个视频
-    const firstUrl = buttons[0].dataset.url.trim();
+    const firstUrl = buttons[0].dataset.url;
     loadVideo(firstUrl);
 
     buttons.forEach(btn => {
