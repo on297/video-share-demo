@@ -15,6 +15,7 @@
       font-family: Arial, sans-serif;
       display: flex;
       flex-direction: column;
+      justify-content: center;
       align-items: center;
       min-height: 100vh;
       padding: 20px;
@@ -25,39 +26,12 @@
       text-align: center;
       opacity: 0.7;
     }
-    .video-container {
-      position: relative;
-      width: 100%;
-      max-width: 90vw;
-    }
     video {
       width: 100%;
+      max-width: 90vw;
+      height: auto;
       border-radius: 12px;
       background: #000;
-      display: none;
-    }
-    .poster {
-      position: relative;
-      width: 100%;
-      padding-top: 56.25%; /* 16:9 */
-      border-radius: 12px;
-      background: linear-gradient(135deg, #111, #333);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #ccc;
-      cursor: pointer;
-      font-size: 18px;
-    }
-    .poster::after {
-      content: '▶';
-      font-size: 48px;
-      color: white;
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      opacity: 0.8;
     }
     .video-list {
       display: flex;
@@ -88,25 +62,23 @@
 
   <h1>🎬 请勿相信视频中的广告</h1>
 
-  <div class="video-container">
-    <div id="poster" class="poster">点击播放</div>
-    <video id="video" controls playsinline webkit-playsinline></video>
-  </div>
+  <video id="video" controls playsinline webkit-playsinline></video>
 
   <div class="video-list" id="videoList">
-    <button class="video-button active" data-url="https://v2025.fhbbff.com/20250629/hA7itnUd/index.m3u8">成宮はるあ</button>
-    <button class="video-button" data-url="https://v2024.fhbbff.com/20241119/goljzkiM/index.m3u8">两个辣妹</button>
-    <button class="video-button" data-url="https://v2025.fhbbff.com/20250418/zOPoJy9O/index.m3u8">永野一夏</button>
+    <button class="video-button" data-url="https://v2025.fhbbff.com/20250629/hA7itnUd/index.m3u8">成宮はるあ绝顶高潮精华特辑</button>
+    <button class="video-button" data-url="https://v2024.fhbbff.com/20241119/goljzkiM/index.m3u8">两个辣妹海莉桑德斯和莉莉贝拉</button>
+    <button class="video-button" data-url="https://v2025.fhbbff.com/20250418/zOPoJy9O/index.m3u8">新人永野一夏初体验激震！</button>
+    <button class="video-button" data-url="https://v2025.fhbbff.com/20250627/4gQwTkJm/index.m3u8">絶え間な激情的な接吻と挿入</button>
+    <button class="video-button" data-url="https://v2025.fhbbff.com/20250616/NhxrHMf0/index.m3u8">绝密珍藏！藤田留美极品嫩穴大放送</button>
+    <button class="video-button" data-url="https://v2025.fhbbff.com/20250708/YHpwroXH/index.m3u8">前列腺开发高潮体验，彻底变成女人！</button>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
   <script>
     const video = document.getElementById('video');
-    const poster = document.getElementById('poster');
     const buttons = document.querySelectorAll('.video-button');
     let hls;
     let saveInterval = null;
-    let currentUrl = '';
 
     function saveProgress(url, time) {
       localStorage.setItem("progress_" + url, time.toFixed(1));
@@ -119,18 +91,21 @@
 
     function setActiveButton(url) {
       buttons.forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.url === url);
+        btn.classList.toggle('active', btn.dataset.url.trim() === url);
       });
     }
 
-    function loadVideo(url, autoPlay = true) {
-      currentUrl = url;
+    function loadVideo(rawUrl) {
+      const url = rawUrl.trim();
+
+      // 清理旧 HLS 实例
       if (hls) {
         hls.destroy();
         hls = null;
       }
 
       setActiveButton(url);
+
       const isM3U8 = url.includes(".m3u8");
       const resumeTime = loadProgress(url);
 
@@ -145,14 +120,21 @@
         hls.attachMedia(video);
         hls.on(Hls.Events.MANIFEST_PARSED, () => {
           video.currentTime = resumeTime;
-          if (autoPlay) video.play();
+          video.play();
+        });
+      } else if (video.canPlayType('application/vnd.apple.mpegurl') && isM3U8) {
+        video.src = url;
+        video.addEventListener('loadedmetadata', function onLoaded() {
+          video.removeEventListener('loadedmetadata', onLoaded);
+          video.currentTime = resumeTime;
+          video.play();
         });
       } else {
         video.src = url;
         video.addEventListener('loadedmetadata', function onLoaded() {
           video.removeEventListener('loadedmetadata', onLoaded);
           video.currentTime = resumeTime;
-          if (autoPlay) video.play();
+          video.play();
         });
       }
 
@@ -164,24 +146,14 @@
       }, 3000);
     }
 
-    // 点击封面播放
-    poster.addEventListener('click', () => {
-      poster.style.display = 'none';
-      video.style.display = 'block';
-      loadVideo(currentUrl);
-    });
+    // 默认播放第一个视频
+    const firstUrl = buttons[0].dataset.url.trim();
+    loadVideo(firstUrl);
 
-    // 默认视频
-    currentUrl = buttons[0].dataset.url;
-
-    // 切换视频按钮点击
+    // 按钮点击切换视频
     buttons.forEach(btn => {
       btn.addEventListener('click', () => {
-        const url = btn.dataset.url;
-        currentUrl = url;
-        setActiveButton(url);
-        poster.style.display = 'flex';
-        video.style.display = 'none';
+        loadVideo(btn.dataset.url.trim());
       });
     });
   </script>
