@@ -62,7 +62,15 @@
 
   <h1>🎬 请勿相信视频中的广告</h1>
 
-  <video id="video" controls playsinline webkit-playsinline></video>
+  <video id="video" 
+         controls 
+         playsinline 
+         webkit-playsinline 
+         x-webkit-airplay="allow" 
+         x5-video-player-type="h5" 
+         x5-video-player-fullscreen="true" 
+         preload="auto">
+  </video>
 
   <div class="video-list" id="videoList">
     <button class="video-button" data-url="https://v2025.fhbbff.com/20250629/hA7itnUd/index.m3u8">成宮はるあ绝顶高潮精华特辑</button>
@@ -98,7 +106,6 @@
     function loadVideo(rawUrl) {
       const url = rawUrl.trim();
 
-      // 清理旧 HLS 实例
       if (hls) {
         hls.destroy();
         hls = null;
@@ -114,29 +121,37 @@
       video.load();
       video.currentTime = 0;
 
+      // 控件刷新技巧
+      video.controls = false;
+
       if (isM3U8 && Hls.isSupported()) {
         hls = new Hls();
         hls.loadSource(url);
         hls.attachMedia(video);
         hls.on(Hls.Events.MANIFEST_PARSED, () => {
           video.currentTime = resumeTime;
-          video.play();
+          video.play().catch(() => {});
         });
       } else if (video.canPlayType('application/vnd.apple.mpegurl') && isM3U8) {
         video.src = url;
         video.addEventListener('loadedmetadata', function onLoaded() {
           video.removeEventListener('loadedmetadata', onLoaded);
           video.currentTime = resumeTime;
-          video.play();
+          video.play().catch(() => {});
         });
       } else {
         video.src = url;
         video.addEventListener('loadedmetadata', function onLoaded() {
           video.removeEventListener('loadedmetadata', onLoaded);
           video.currentTime = resumeTime;
-          video.play();
+          video.play().catch(() => {});
         });
       }
+
+      // 控件延迟显示（有助于快进条恢复）
+      video.addEventListener('loadedmetadata', () => {
+        video.controls = true;
+      });
 
       clearInterval(saveInterval);
       saveInterval = setInterval(() => {
@@ -150,12 +165,17 @@
     const firstUrl = buttons[0].dataset.url.trim();
     loadVideo(firstUrl);
 
-    // 按钮点击切换视频
+    // 视频按钮点击切换
     buttons.forEach(btn => {
       btn.addEventListener('click', () => {
         loadVideo(btn.dataset.url.trim());
       });
     });
+
+    // 安卓微信：首次点击触发播放权限
+    document.body.addEventListener('touchstart', () => {
+      video.play().catch(() => {});
+    }, { once: true });
   </script>
 
 </body>
