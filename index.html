@@ -26,13 +26,48 @@
       text-align: center;
       opacity: 0.7;
     }
-    video {
+
+    .video-container {
+      position: relative;
       width: 100%;
       max-width: 90vw;
+    }
+
+    video {
+      width: 100%;
       height: auto;
       border-radius: 12px;
       background: #000;
     }
+
+    .loading-overlay {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.4);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      color: white;
+      font-size: 14px;
+      pointer-events: none;
+    }
+
+    .spinner {
+      border: 4px solid rgba(255,255,255,0.2);
+      border-left-color: #00ff88;
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      animation: spin 1s linear infinite;
+      margin-bottom: 10px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
     .video-list {
       display: flex;
       flex-wrap: wrap;
@@ -40,6 +75,7 @@
       margin-top: 20px;
       gap: 10px;
     }
+
     .video-button {
       padding: 10px 16px;
       font-size: 15px;
@@ -56,55 +92,27 @@
     .video-button.active {
       background-color: #00c300;
     }
-
-    /* 加载动画遮罩层 */
-    .loading-mask {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      background: rgba(0, 0, 0, 0.9);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      z-index: 9999;
-      flex-direction: column;
-      color: white;
-      font-size: 16px;
-    }
-
-    .spinner {
-      border: 4px solid rgba(255,255,255,0.2);
-      border-left-color: #00ff88;
-      border-radius: 50%;
-      width: 40px;
-      height: 40px;
-      animation: spin 1s linear infinite;
-      margin-bottom: 15px;
-    }
-
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
   </style>
 </head>
 <body>
 
-  <div class="loading-mask" id="loadingMask">
-    <div class="spinner"></div>
-    正在加载视频，请稍候...
-  </div>
-
   <h1>🎬 请勿相信视频中的广告</h1>
 
-  <video id="video" 
-         controls 
-         playsinline 
-         webkit-playsinline 
-         x-webkit-airplay="allow" 
-         x5-video-player-type="h5" 
-         x5-video-player-fullscreen="true" 
-         preload="auto">
-  </video>
+  <div class="video-container">
+    <video id="video"
+           controls
+           playsinline
+           webkit-playsinline
+           x-webkit-airplay="allow"
+           x5-video-player-type="h5"
+           x5-video-player-fullscreen="true"
+           preload="auto"></video>
+
+    <div class="loading-overlay" id="loadingOverlay">
+      <div class="spinner"></div>
+      正在加载视频...
+    </div>
+  </div>
 
   <div class="video-list" id="videoList">
     <button class="video-button" data-url="https://v2025.fhbbff.com/20250629/hA7itnUd/index.m3u8">成宮はるあ绝顶高潮精华特辑</button>
@@ -119,7 +127,7 @@
   <script>
     const video = document.getElementById('video');
     const buttons = document.querySelectorAll('.video-button');
-    const loadingMask = document.getElementById('loadingMask');
+    const loadingOverlay = document.getElementById('loadingOverlay');
     let hls = null;
     let saveInterval = null;
 
@@ -181,10 +189,8 @@
       const isM3U8 = url.includes(".m3u8");
       const resumeTime = loadProgress(url);
 
-      // 显示加载动画
       showLoading();
 
-      // 重置播放器
       video.pause();
       video.removeAttribute('src');
       video.removeAttribute('poster');
@@ -199,38 +205,31 @@
 
       setActiveButton(url);
 
-      // 延迟加载（iOS 兼容）
       setTimeout(() => {
         actuallyLoadSource(url, resumeTime, isM3U8);
       }, 100);
     }
 
-    // 显示 loading 遮罩
     function showLoading() {
-      loadingMask.style.display = 'flex';
+      loadingOverlay.style.display = 'flex';
     }
 
-    // 隐藏 loading 遮罩
     function hideLoading() {
-      loadingMask.style.display = 'none';
+      loadingOverlay.style.display = 'none';
     }
 
-    // 监听视频真正开始播放时隐藏 loading
     video.addEventListener('playing', hideLoading);
     video.addEventListener('canplay', hideLoading);
 
-    // 默认播放第一个视频
     const firstUrl = buttons[0].dataset.url.trim();
     loadVideo(firstUrl);
 
-    // 切换视频按钮
     buttons.forEach(btn => {
       btn.addEventListener('click', () => {
         loadVideo(btn.dataset.url.trim());
       });
     });
 
-    // 安卓微信首次触摸触发播放
     document.body.addEventListener('touchstart', () => {
       video.play().catch(() => {});
     }, { once: true });
