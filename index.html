@@ -56,9 +56,43 @@
     .video-button.active {
       background-color: #00c300;
     }
+
+    /* 加载动画遮罩层 */
+    .loading-mask {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.9);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      flex-direction: column;
+      color: white;
+      font-size: 16px;
+    }
+
+    .spinner {
+      border: 4px solid rgba(255,255,255,0.2);
+      border-left-color: #00ff88;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin-bottom: 15px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
   </style>
 </head>
 <body>
+
+  <div class="loading-mask" id="loadingMask">
+    <div class="spinner"></div>
+    正在加载视频，请稍候...
+  </div>
 
   <h1>🎬 请勿相信视频中的广告</h1>
 
@@ -85,7 +119,8 @@
   <script>
     const video = document.getElementById('video');
     const buttons = document.querySelectorAll('.video-button');
-    let hls;
+    const loadingMask = document.getElementById('loadingMask');
+    let hls = null;
     let saveInterval = null;
 
     function saveProgress(url, time) {
@@ -103,27 +138,8 @@
       });
     }
 
-    function loadVideo(rawUrl) {
-      const url = rawUrl.trim();
-
-      if (hls) {
-        hls.destroy();
-        hls = null;
-      }
-
-      setActiveButton(url);
-
-      const isM3U8 = url.includes(".m3u8");
-      const resumeTime = loadProgress(url);
-
-      video.pause();
-      video.removeAttribute('src');
-      video.load();
-      video.currentTime = 0;
-
-      // 控件刷新技巧
-      video.controls = false;
-
+    function actuallyLoadSource(url, resumeTime, isM3U8) {
+      showLoading();
       if (isM3U8 && Hls.isSupported()) {
         hls = new Hls();
         hls.loadSource(url);
@@ -148,7 +164,6 @@
         });
       }
 
-      // 控件延迟显示（有助于快进条恢复）
       video.addEventListener('loadedmetadata', () => {
         video.controls = true;
       });
@@ -161,18 +176,61 @@
       }, 3000);
     }
 
+    function loadVideo(rawUrl) {
+      const url = rawUrl.trim();
+      const isM3U8 = url.includes(".m3u8");
+      const resumeTime = loadProgress(url);
+
+      // 显示加载动画
+      showLoading();
+
+      // 重置播放器
+      video.pause();
+      video.removeAttribute('src');
+      video.removeAttribute('poster');
+      video.load();
+      video.currentTime = 0;
+      video.controls = false;
+
+      if (hls) {
+        hls.destroy();
+        hls = null;
+      }
+
+      setActiveButton(url);
+
+      // 延迟加载（iOS 兼容）
+      setTimeout(() => {
+        actuallyLoadSource(url, resumeTime, isM3U8);
+      }, 100);
+    }
+
+    // 显示 loading 遮罩
+    function showLoading() {
+      loadingMask.style.display = 'flex';
+    }
+
+    // 隐藏 loading 遮罩
+    function hideLoading() {
+      loadingMask.style.display = 'none';
+    }
+
+    // 监听视频真正开始播放时隐藏 loading
+    video.addEventListener('playing', hideLoading);
+    video.addEventListener('canplay', hideLoading);
+
     // 默认播放第一个视频
     const firstUrl = buttons[0].dataset.url.trim();
     loadVideo(firstUrl);
 
-    // 视频按钮点击切换
+    // 切换视频按钮
     buttons.forEach(btn => {
       btn.addEventListener('click', () => {
         loadVideo(btn.dataset.url.trim());
       });
     });
 
-    // 安卓微信：首次点击触发播放权限
+    // 安卓微信首次触摸触发播放
     document.body.addEventListener('touchstart', () => {
       video.play().catch(() => {});
     }, { once: true });
