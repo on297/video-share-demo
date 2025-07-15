@@ -5,9 +5,7 @@
   <title>视频播放页</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
     body {
       margin: 0;
       background: #000;
@@ -26,20 +24,17 @@
       text-align: center;
       opacity: 0.7;
     }
-
     .video-container {
       position: relative;
       width: 100%;
       max-width: 90vw;
     }
-
     video {
       width: 100%;
       height: auto;
       border-radius: 12px;
       background: #000;
     }
-
     .loading-overlay {
       position: absolute;
       top: 0; left: 0;
@@ -53,7 +48,6 @@
       font-size: 14px;
       pointer-events: none;
     }
-
     .spinner {
       border: 4px solid rgba(255,255,255,0.2);
       border-left-color: #00ff88;
@@ -63,11 +57,28 @@
       animation: spin 1s linear infinite;
       margin-bottom: 10px;
     }
-
     @keyframes spin {
       to { transform: rotate(360deg); }
     }
-
+    #clickToPlay {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+    }
+    #clickToPlay button {
+      padding: 10px 20px;
+      font-size: 16px;
+      background: #00cc00;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+    }
     .video-list {
       display: flex;
       flex-wrap: wrap;
@@ -75,7 +86,6 @@
       margin-top: 20px;
       gap: 10px;
     }
-
     .video-button {
       padding: 10px 16px;
       font-size: 15px;
@@ -93,147 +103,142 @@
       background-color: #00c300;
     }
   </style>
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 </head>
 <body>
 
-  <h1>🎬 请勿相信视频中的广告</h1>
+<h1>🎬 请勿相信视频中的广告</h1>
 
-  <div class="video-container">
-    <video id="video"
-           controls
-           playsinline
-           webkit-playsinline
-           x-webkit-airplay="allow"
-           x5-video-player-type="h5"
-           x5-video-player-fullscreen="true"
-           preload="auto"></video>
-
-    <div class="loading-overlay" id="loadingOverlay">
-      <div class="spinner"></div>
-      正在加载视频...
-    </div>
+<div class="video-container">
+  <video id="video" playsinline webkit-playsinline preload="auto" poster="loading.jpg" controls></video>
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="spinner"></div>
+    正在加载视频...
   </div>
-
-  <div class="video-list" id="videoList">
-    <button class="video-button" data-url="https://v2025.fhbbff.com/20250629/hA7itnUd/index.m3u8">成宮はるあ绝顶高潮精华特辑</button>
-    <button class="video-button" data-url="https://v2024.fhbbff.com/20241119/goljzkiM/index.m3u8">两个辣妹海莉桑德斯和莉莉贝拉</button>
-    <button class="video-button" data-url="https://v2025.fhbbff.com/20250418/zOPoJy9O/index.m3u8">新人永野一夏初体验激震！</button>
-    <button class="video-button" data-url="https://v2025.fhbbff.com/20250627/4gQwTkJm/index.m3u8">絶え間な激情的な接吻と挿入</button>
-    <button class="video-button" data-url="https://v2025.fhbbff.com/20250616/NhxrHMf0/index.m3u8">绝密珍藏！藤田留美极品嫩穴大放送</button>
-    <button class="video-button" data-url="https://v2025.fhbbff.com/20250708/YHpwroXH/index.m3u8">前列腺开发高潮体验，彻底变成女人！</button>
+  <div id="clickToPlay">
+    <button>点击开始播放</button>
   </div>
+</div>
 
-  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-  <script>
-    const video = document.getElementById('video');
-    const buttons = document.querySelectorAll('.video-button');
-    const loadingOverlay = document.getElementById('loadingOverlay');
-    let hls = null;
-    let saveInterval = null;
+<div class="video-list" id="videoList">
+  <button class="video-button" data-url="https://v2025.fhbbff.com/20250629/hA7itnUd/index.m3u8">成宮はるあ绝顶高潮精华特辑</button>
+  <button class="video-button" data-url="https://v2024.fhbbff.com/20241119/goljzkiM/index.m3u8">两个辣妹海莉桑德斯和莉莉贝拉</button>
+  <button class="video-button" data-url="https://v2025.fhbbff.com/20250418/zOPoJy9O/index.m3u8">新人永野一夏初体验激震！</button>
+  <button class="video-button" data-url="https://v2025.fhbbff.com/20250627/4gQwTkJm/index.m3u8">絶え間な激情的な接吻と挿入</button>
+  <button class="video-button" data-url="https://v2025.fhbbff.com/20250616/NhxrHMf0/index.m3u8">绝密珍藏！藤田留美极品嫩穴大放送</button>
+  <button class="video-button" data-url="https://v2025.fhbbff.com/20250708/YHpwroXH/index.m3u8">前列腺开发高潮体验，彻底变成女人！</button>
+</div>
 
-    function saveProgress(url, time) {
-      localStorage.setItem("progress_" + url, time.toFixed(1));
-    }
+<script>
+  const video = document.getElementById('video');
+  const buttons = document.querySelectorAll('.video-button');
+  const loadingOverlay = document.getElementById('loadingOverlay');
+  const clickToPlay = document.getElementById('clickToPlay');
+  let hls = null;
+  let saveInterval = null;
 
-    function loadProgress(url) {
-      const t = parseFloat(localStorage.getItem("progress_" + url));
-      return isNaN(t) ? 0 : t;
-    }
+  function isIOS() {
+    return /iP(hone|od|ad)/.test(navigator.userAgent);
+  }
 
-    function setActiveButton(url) {
-      buttons.forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.url.trim() === url);
-      });
-    }
+  function saveProgress(url, time) {
+    localStorage.setItem("progress_" + url, time.toFixed(1));
+  }
 
-    function actuallyLoadSource(url, resumeTime, isM3U8) {
-      showLoading();
-      if (isM3U8 && Hls.isSupported()) {
-        hls = new Hls();
-        hls.loadSource(url);
-        hls.attachMedia(video);
-        hls.on(Hls.Events.MANIFEST_PARSED, () => {
-          video.currentTime = resumeTime;
-          video.play().catch(() => {});
-        });
-      } else if (video.canPlayType('application/vnd.apple.mpegurl') && isM3U8) {
-        video.src = url;
-        video.addEventListener('loadedmetadata', function onLoaded() {
-          video.removeEventListener('loadedmetadata', onLoaded);
-          video.currentTime = resumeTime;
-          video.play().catch(() => {});
-        });
-      } else {
-        video.src = url;
-        video.addEventListener('loadedmetadata', function onLoaded() {
-          video.removeEventListener('loadedmetadata', onLoaded);
-          video.currentTime = resumeTime;
-          video.play().catch(() => {});
-        });
-      }
+  function loadProgress(url) {
+    const t = parseFloat(localStorage.getItem("progress_" + url));
+    return isNaN(t) ? 0 : t;
+  }
 
-      video.addEventListener('loadedmetadata', () => {
-        video.controls = true;
-      });
-
-      clearInterval(saveInterval);
-      saveInterval = setInterval(() => {
-        if (!video.paused && !video.ended) {
-          saveProgress(url, video.currentTime);
-        }
-      }, 3000);
-    }
-
-    function loadVideo(rawUrl) {
-      const url = rawUrl.trim();
-      const isM3U8 = url.includes(".m3u8");
-      const resumeTime = loadProgress(url);
-
-      showLoading();
-
-      video.pause();
-      video.removeAttribute('src');
-      video.removeAttribute('poster');
-      video.load();
-      video.currentTime = 0;
-      video.controls = false;
-
-      if (hls) {
-        hls.destroy();
-        hls = null;
-      }
-
-      setActiveButton(url);
-
-      setTimeout(() => {
-        actuallyLoadSource(url, resumeTime, isM3U8);
-      }, 100);
-    }
-
-    function showLoading() {
-      loadingOverlay.style.display = 'flex';
-    }
-
-    function hideLoading() {
-      loadingOverlay.style.display = 'none';
-    }
-
-    video.addEventListener('playing', hideLoading);
-    video.addEventListener('canplay', hideLoading);
-
-    const firstUrl = buttons[0].dataset.url.trim();
-    loadVideo(firstUrl);
-
+  function setActiveButton(url) {
     buttons.forEach(btn => {
-      btn.addEventListener('click', () => {
-        loadVideo(btn.dataset.url.trim());
+      btn.classList.toggle('active', btn.dataset.url.trim() === url);
+    });
+  }
+
+  function showLoading() {
+    loadingOverlay.style.display = 'flex';
+  }
+
+  function hideLoading() {
+    loadingOverlay.style.display = 'none';
+  }
+
+  function actuallyLoadSource(url, resumeTime, isM3U8) {
+    showLoading();
+
+    if (isM3U8 && !isIOS() && typeof Hls !== 'undefined') {
+      hls = new Hls();
+      hls.loadSource(url);
+      hls.attachMedia(video);
+      hls.on(Hls.Events.MANIFEST_PARSED, () => {
+        video.currentTime = resumeTime;
+        video.play().catch(() => {});
       });
+    } else {
+      video.src = url;
+      video.addEventListener('loadedmetadata', function onLoaded() {
+        video.removeEventListener('loadedmetadata', onLoaded);
+        video.currentTime = resumeTime;
+        video.play().catch(() => {});
+      });
+    }
+
+    video.addEventListener('loadedmetadata', () => {
+      video.controls = true;
     });
 
-    document.body.addEventListener('touchstart', () => {
-      video.play().catch(() => {});
-    }, { once: true });
-  </script>
+    clearInterval(saveInterval);
+    saveInterval = setInterval(() => {
+      if (!video.paused && !video.ended) {
+        saveProgress(url, video.currentTime);
+      }
+    }, 3000);
+  }
+
+  function loadVideo(rawUrl) {
+    const url = rawUrl.trim();
+    const isM3U8 = url.includes(".m3u8");
+    const resumeTime = loadProgress(url);
+
+    showLoading();
+
+    video.pause();
+    video.removeAttribute('src');
+    video.removeAttribute('poster');
+    video.load();
+    video.currentTime = 0;
+    video.controls = false;
+
+    if (hls) {
+      hls.destroy();
+      hls = null;
+    }
+
+    setActiveButton(url);
+
+    setTimeout(() => {
+      actuallyLoadSource(url, resumeTime, isM3U8);
+    }, 100);
+  }
+
+  video.addEventListener('playing', hideLoading);
+  video.addEventListener('canplay', hideLoading);
+
+  clickToPlay.addEventListener('click', () => {
+    video.play().catch(() => {});
+    clickToPlay.style.display = 'none';
+  });
+
+  const firstUrl = buttons[0].dataset.url.trim();
+  loadVideo(firstUrl);
+
+  buttons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      loadVideo(btn.dataset.url.trim());
+    });
+  });
+</script>
 
 </body>
 </html>
